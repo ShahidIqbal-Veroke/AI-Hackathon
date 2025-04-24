@@ -1,0 +1,124 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Health Dashboard</h1>
+    <div class="header-controls">
+      <button class="settings-button" (click)="openSettings()">
+        <i class="fas fa-cog"></i> Settings
+      </button>
+      <button class="theme-toggle" (click)="themeService.toggleTheme()">
+        <span *ngIf="isDarkTheme$ | async">☀️ Light Mode</span>
+        <span *ngIf="!(isDarkTheme$ | async)">🌙 Dark Mode</span>
+      </button>
+    </div>
+  </header>
+  
+  <main class="dashboard-content">
+    <div class="welcome-message">
+      <h2>Welcome to your Health Dashboard</h2>
+      <p>Your personalized health monitoring and management platform</p>
+      <button class="control-button" (click)="togglePause()">
+        <i class="fas" [class.fa-pause]="!isPaused" [class.fa-play]="isPaused"
+        style="background-color: royalblue;"></i>
+        {{ isPaused ? 'Resume' : 'Pause' }} Data Feed
+      </button>
+    </div>
+
+    <div class="current-readings-section">
+      <div class="section-header">
+        <h2 class="section-title">Current Health Status</h2>
+        <div class="last-update" [class.stale]="isDataStale">
+          Last Update: {{ lastUpdateTime | date:'medium' }}
+          <span class="status-dot" [class.active]="!isPaused"></span>
+        </div>
+      </div>
+      <div class="current-readings">
+        <div class="reading-card large" [class]="getStatusClass(currentHeartRate.status)">
+          <div class="reading-header">
+            <h3>Heart Rate</h3>
+            <div class="reading-time">{{ currentHeartRate.timestamp | date:'mediumTime' }}</div>
+          </div>
+          <div class="reading-main">
+            <div class="reading-value">{{ currentHeartRate.value }}</div>
+            <div class="reading-unit">BPM</div>
+          </div>
+          <div class="status-indicator">{{ currentHeartRate.status | titlecase }}</div>
+          <div class="normal-range">Normal: {{ HEART_RATE_THRESHOLDS.normal.min }}-{{ HEART_RATE_THRESHOLDS.normal.max }} BPM</div>
+        </div>
+
+        <div class="reading-card large" [class]="getStatusClass(currentBloodPressure.systolic.status)">
+          <div class="reading-header">
+            <h3>Blood Pressure</h3>
+            <div class="reading-time">{{ currentBloodPressure.systolic.timestamp | date:'mediumTime' }}</div>
+          </div>
+          <div class="reading-main">
+            <div class="reading-value">{{ currentBloodPressure.systolic.value }}/{{ currentBloodPressure.diastolic.value }}</div>
+            <div class="reading-unit">mmHg</div>
+          </div>
+          <div class="status-indicator">{{ currentBloodPressure.systolic.status | titlecase }}</div>
+          <div class="normal-range">
+            Normal: {{ BLOOD_PRESSURE_THRESHOLDS.systolic.normal.min }}/{{ BLOOD_PRESSURE_THRESHOLDS.diastolic.normal.min }}-
+            {{ BLOOD_PRESSURE_THRESHOLDS.systolic.normal.max }}/{{ BLOOD_PRESSURE_THRESHOLDS.diastolic.normal.max }} mmHg
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3>Heart Rate History</h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="heartRateChartData"
+            [options]="chartOptions"
+            [legend]="chartLegend"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Blood Pressure History</h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="bloodPressureChartData"
+            [options]="chartOptions"
+            [legend]="chartLegend"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="historical-data">
+      <div class="historical-data-header">
+        <h3>Historical Data (Last 15 Minutes)</h3>
+        <button class="clear-button" (click)="clearHistoricalData()">
+          <i class="fas fa-trash"></i> Clear Data
+        </button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Heart Rate</th>
+              <th>Heart Rate Status</th>
+              <th>Blood Pressure</th>
+              <th>Blood Pressure Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let record of historicalData">
+              <td>{{ record.timestamp | date:'HH:mm:ss' }}</td>
+              <td>{{ record.heartRate }} BPM</td>
+              <td [class]="getStatusClass(record.heartRateStatus)">{{ record.heartRateStatus | titlecase }}</td>
+              <td>{{ record.systolic }}/{{ record.diastolic }} mmHg</td>
+              <td [class]="getStatusClass(record.bloodPressureStatus)">{{ record.bloodPressureStatus | titlecase }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <app-settings-dialog></app-settings-dialog>
+</div>
